@@ -1,0 +1,701 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/mangeshemekar/Deep-Learning/blob/main/Insurance/content/new_insurance_data.csv\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "Xw3XojBfpx1_"
+      },
+      "outputs": [],
+      "source": [
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import matplotlib.pyplot as plt"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "id": "pONcAkNMpx2C"
+      },
+      "outputs": [],
+      "source": [
+        "df = pd.read_csv(r'new_insurance_data.csv')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 3,
+      "metadata": {
+        "id": "sXUnj0y9px2C"
+      },
+      "outputs": [],
+      "source": [
+        "X = df[['age', 'affordibility']].values\n",
+        "y = df[['bought_insurance']].values"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 4,
+      "metadata": {
+        "id": "P8FtTPrFpx2C"
+      },
+      "outputs": [],
+      "source": [
+        "X[:, 0] = X[:, 0] / 100  # Normalize the 'age' column"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 5,
+      "metadata": {
+        "id": "QU-EyV9npx2D"
+      },
+      "outputs": [],
+      "source": [
+        "X = np.hstack((np.ones((X.shape[0], 1)), X))  # Add bias term as the first column"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 6,
+      "metadata": {
+        "id": "iqzcAKQepx2D"
+      },
+      "outputs": [],
+      "source": [
+        "# Sigmoid function\n",
+        "def sigmoid(z):\n",
+        "    return 1 / (1 + np.exp(-z))\n",
+        "\n",
+        "# Binary cross-entropy loss\n",
+        "def compute_loss(y, y_pred):\n",
+        "    return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))\n",
+        "\n",
+        "def gradient_descent(X, y, lr=0.1, epochs=100):\n",
+        "    m, n = X.shape  # m: number of samples, n: number of features (including bias)\n",
+        "    weights = np.zeros(n).reshape(-1, 1)  # Initialize weights to zeros (n, 1)\n",
+        "    losses = []\n",
+        "\n",
+        "    # Ensure y is reshaped correctly\n",
+        "    y = y.reshape(-1, 1)\n",
+        "\n",
+        "    for epoch in range(epochs):\n",
+        "        # Linear combination\n",
+        "        z = np.dot(X, weights)  # Shape: (m, 1)\n",
+        "        # Sigmoid activation\n",
+        "        y_pred = 1 / (1 + np.exp(-z))  # Shape: (m, 1)\n",
+        "        # Compute gradient\n",
+        "        gradient = np.dot(X.T, (y_pred - y)) / m  # Shape: (n, 1)\n",
+        "        # Update weights\n",
+        "        weights -= lr * gradient\n",
+        "        # Compute loss\n",
+        "        loss = -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))  # Binary cross-entropy loss\n",
+        "        losses.append(loss)\n",
+        "\n",
+        "        # Print progress every 10 epochs\n",
+        "        if epoch % 10 == 0:\n",
+        "            print(f\"Epoch {epoch}, Loss: {loss:.4f}\")\n",
+        "\n",
+        "    return weights, losses\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "IwAa2k28px2E",
+        "outputId": "297b2cc6-7e15-400f-c7d8-78e871d0ee70"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Epoch 0, Loss: 0.6931\n",
+            "Epoch 10, Loss: 0.6862\n",
+            "Epoch 20, Loss: 0.6808\n",
+            "Epoch 30, Loss: 0.6763\n",
+            "Epoch 40, Loss: 0.6722\n",
+            "Epoch 50, Loss: 0.6685\n",
+            "Epoch 60, Loss: 0.6652\n",
+            "Epoch 70, Loss: 0.6621\n",
+            "Epoch 80, Loss: 0.6592\n",
+            "Epoch 90, Loss: 0.6565\n",
+            "Trained Weights (including bias): [[-0.25495847]\n",
+            " [ 0.        ]\n",
+            " [ 0.55159276]]\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Run gradient descent\n",
+        "learning_rate = 0.1\n",
+        "epochs = 100\n",
+        "weights, losses = gradient_descent(X, y, lr=learning_rate, epochs=epochs)\n",
+        "\n",
+        "# Print final weights\n",
+        "print(\"Trained Weights (including bias):\", weights)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Sw8HHT8cpx2E",
+        "outputId": "bc0e5de7-3868-4485-8f8b-159f7e6d07fc"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Accuracy: 0.6786\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Calculate predictions\n",
+        "z = np.dot(X, weights)\n",
+        "y_pred = sigmoid(z)\n",
+        "y_pred_classes = (y_pred >= 0.5).astype(int)  # Convert probabilities to binary predictions\n",
+        "\n",
+        "# Calculate accuracy\n",
+        "accuracy = np.mean(y_pred_classes == y)\n",
+        "print(f\"Accuracy: {accuracy:.4f}\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 9,
+      "metadata": {
+        "id": "dc0Z58rlpx2F"
+      },
+      "outputs": [],
+      "source": [
+        "y_predicted = np.array(y_pred_classes)\n",
+        "y_true = np.array(y)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 10,
+      "metadata": {
+        "id": "QNeJcVL8px2F"
+      },
+      "outputs": [],
+      "source": [
+        "def mae(y_predicted, y_true):\n",
+        "    total_error = 0\n",
+        "    for yp, yt in zip(y_predicted, y_true):\n",
+        "        total_error += abs(yp - yt)\n",
+        "    print(\"Total error is:\",total_error)\n",
+        "    mae = total_error/len(y_predicted)\n",
+        "    print(\"Mean absolute error is:\",mae)\n",
+        "    return mae"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 11,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "711LlGH5px2F",
+        "outputId": "f0367f12-51a1-4eb3-86ba-f3a79ec9ee55"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Total error is: [9]\n",
+            "Mean absolute error is: [0.32142857]\n"
+          ]
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([0.32142857])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 11
+        }
+      ],
+      "source": [
+        "mae(y_predicted, y_true)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 12,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "NFGa1wrnpx2G",
+        "outputId": "fc695d1e-e8a1-4d02-e4a3-c6d2062e4a70"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([[1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1]])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 12
+        }
+      ],
+      "source": [
+        "np.abs(y_predicted-y_true)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 13,
+      "metadata": {
+        "id": "Y6ViJmOZpx2G"
+      },
+      "outputs": [],
+      "source": [
+        "def mae_np(y_predicted, y_true):\n",
+        "    return np.mean(np.abs(y_predicted-y_true))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 14,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "gwkfVNRmpx2G",
+        "outputId": "ab4fbc4a-2ffa-4707-cb3e-0c57cd18e797"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "np.float64(0.32142857142857145)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 14
+        }
+      ],
+      "source": [
+        "mae_np(y_predicted, y_true)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 15,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7wwNRiHjpx2G",
+        "outputId": "3d3dbd84-6fe9-4831-e652-b5c0c8017c5b"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "<ipython-input-15-faee82fd9f21>:1: RuntimeWarning: divide by zero encountered in log\n",
+            "  np.log([0])\n"
+          ]
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([-inf])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 15
+        }
+      ],
+      "source": [
+        "np.log([0])"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 16,
+      "metadata": {
+        "id": "HF6gv__5px2H"
+      },
+      "outputs": [],
+      "source": [
+        "epsilon = 1e-15"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 17,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "oL5MAWNwpx2H",
+        "outputId": "423e42be-5851-4b1b-e746-2b1553e32fdb"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([-34.53877639])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 17
+        }
+      ],
+      "source": [
+        "np.log([1e-15])"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 18,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "62Etw1a_px2I",
+        "outputId": "f9a4e533-e526-404a-9c9d-5cc477bbb3fb"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([[1],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [0],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [1],\n",
+              "       [1]])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 18
+        }
+      ],
+      "source": [
+        "y_predicted"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 19,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "dyX8N_Fppx2I",
+        "outputId": "c7305f30-0fb8-4172-dbc5-20b6cdf6d876"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "[array([1]),\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " 1e-15,\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " 1e-15,\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " 1e-15,\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " array([1]),\n",
+              " array([1])]"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 19
+        }
+      ],
+      "source": [
+        "y_predicted_new = [max(i,epsilon) for i in y_predicted]\n",
+        "y_predicted_new"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 20,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Jgm4TchNpx2I",
+        "outputId": "f091b0df-1685-43b8-b17b-31a2114f3f38"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "0.999999999999999"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 20
+        }
+      ],
+      "source": [
+        "1-epsilon"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 21,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "-JRC8Nh1px2J",
+        "outputId": "abc8d2c8-a5f6-41e2-9739-275ca94c45f8"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([1.e+00, 1.e-15, 1.e+00, 1.e-15, 1.e+00, 1.e+00, 1.e-15, 1.e-15,\n",
+              "       1.e+00, 1.e+00, 1.e+00, 1.e+00, 1.e-15, 1.e-15, 1.e+00, 1.e+00,\n",
+              "       1.e-15, 1.e+00, 1.e-15, 1.e+00, 1.e+00, 1.e-15, 1.e+00, 1.e+00,\n",
+              "       1.e+00, 1.e+00, 1.e+00, 1.e+00])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 21
+        }
+      ],
+      "source": [
+        "y_predicted_new = [min(i,1-epsilon) for i in y_predicted_new]\n",
+        "y_predicted_new = np.array(y_predicted_new)\n",
+        "y_predicted_new"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 22,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "cSBKbv6qpx2J",
+        "outputId": "746f0007-f8c6-4187-a3a3-ac655c156695"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "array([-9.99200722e-16, -3.45387764e+01, -9.99200722e-16, -3.45387764e+01,\n",
+              "       -9.99200722e-16, -9.99200722e-16, -3.45387764e+01, -3.45387764e+01,\n",
+              "       -9.99200722e-16, -9.99200722e-16, -9.99200722e-16, -9.99200722e-16,\n",
+              "       -3.45387764e+01, -3.45387764e+01, -9.99200722e-16, -9.99200722e-16,\n",
+              "       -3.45387764e+01, -9.99200722e-16, -3.45387764e+01, -9.99200722e-16,\n",
+              "       -9.99200722e-16, -3.45387764e+01, -9.99200722e-16, -9.99200722e-16,\n",
+              "       -9.99200722e-16, -9.99200722e-16, -9.99200722e-16, -9.99200722e-16])"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 22
+        }
+      ],
+      "source": [
+        "np.log(y_predicted_new)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 23,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "FqosJkRYpx2J",
+        "outputId": "b311252d-66ef-4f27-e9dc-7d36ba299b08"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "np.float64(17.26965948944059)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 23
+        }
+      ],
+      "source": [
+        "-np.mean(y_true*np.log(y_predicted_new)+(1-y_true)*np.log(1-y_predicted_new))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 24,
+      "metadata": {
+        "id": "gWi7uIGqpx2J"
+      },
+      "outputs": [],
+      "source": [
+        "def log_loss(y_true, y_predicted):\n",
+        "    y_predicted_new = [max(i,epsilon) for i in y_predicted]\n",
+        "    y_predicted_new = [min(i,1-epsilon) for i in y_predicted_new]\n",
+        "    y_predicted_new = np.array(y_predicted_new)\n",
+        "    return -np.mean(y_true*np.log(y_predicted_new)+(1-y_true)*np.log(1-y_predicted_new))"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 25,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "5uuACfG6px2J",
+        "outputId": "fc6cacb2-1850-4781-b132-ff3afbb6d2bf"
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "np.float64(17.26965948944059)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 25
+        }
+      ],
+      "source": [
+        "log_loss(y_true, y_predicted)"
+      ]
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.11.8"
+    },
+    "colab": {
+      "provenance": [],
+      "include_colab_link": true
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
